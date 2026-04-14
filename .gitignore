@@ -1,0 +1,6 @@
+dist/
+node_modules/
+.DS_Store
+plan_de_trabajo.md
+specs.md
+package-lock.json
