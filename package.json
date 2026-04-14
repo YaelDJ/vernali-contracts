@@ -2,12 +2,37 @@
   "name": "@vernali/contracts",
   "version": "0.0.0",
   "description": "Shared TypeScript interfaces and base error classes for the Vernali suite",
+  "homepage": "https://github.com/YaelDJ/vernali-contracts.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YaelDJ/vernali-contracts.git"
+  },
+  "keywords": [
+    "vernali",
+    "contracts",
+    "typescript",
+    "interfaces",
+    "errors",
+    "http"
+  ],
+  "author": "Yael De Jesus",
+  "license": "ISC",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
