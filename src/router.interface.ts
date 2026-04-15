@@ -8,19 +8,27 @@
 import type { IContext } from './context.interface.js';
 import type { IMiddlewareFn, Next } from './middleware.interface.js';
 
+type MatchResult = {
+  matched: boolean
+  consumedPath: string
+  params: Record<string, string>
+}
+
 export interface ILayer {
   path: string | RegExp;
   method: string | null; // null = matches all methods (used by use())
-  handler: IMiddlewareFn;
+  handlers: IMiddlewareFn[];
+  router: IRouter | null;
+  isRoute: boolean
+
+  matches(pathName: string, method: string | undefined): MatchResult | null
 }
 
 export interface IRouter {
-  use(path: string, ...handlers: IMiddlewareFn[]): this;
-  get(path: string, ...handlers: IMiddlewareFn[]): this;
-  post(path: string, ...handlers: IMiddlewareFn[]): this;
-  put(path: string, ...handlers: IMiddlewareFn[]): this;
-  patch(path: string, ...handlers: IMiddlewareFn[]): this;
-  delete(path: string, ...handlers: IMiddlewareFn[]): this;
-  handle(ctx: IContext, next: Next): Promise<void>;
+  use(path: string | RegExp | IRouter | IMiddlewareFn, ...handlers: IMiddlewareFn[]): this;
+  all(path: string | RegExp, ...handler: IMiddlewareFn[]): this;
+  register(method: string | null, path: string | RegExp, ...handlers: IMiddlewareFn[]): this
+  handle(ctx: IContext, next?: Next): Promise<void>;
   readonly stack: ILayer[];
+  [key: string]: any
 }
