@@ -1,6 +1,6 @@
 # @vernali/contracts
 
-> Shared TypeScript interfaces and base error classes for the Vernali suite.
+> Interfaces TypeScript y clases de error base compartidas por todo el ecosistema Vernali.
 
 ## Instalación
 
@@ -12,22 +12,22 @@ Requiere Node.js `>=18` y TypeScript `>=5.4`.
 
 ## Descripción
 
-`@vernali/contracts` es el paquete central de contratos del ecosistema **Vernali**. Define las interfaces TypeScript y las clases de error base que deben ser implementadas por todos los paquetes del suite, garantizando coherencia arquitectónica y tipado estricto entre servicios.
+`@vernali/contracts` es el paquete de contratos del ecosistema **Vernali**. Contiene exclusivamente interfaces TypeScript, types y clases de error base que todos los paquetes del suite deben implementar. Centralizar estos contratos garantiza coherencia arquitectónica y tipado estricto entre servicios, sin introducir acoplamiento entre implementaciones concretas.
 
-El paquete es **zero-dependency** en producción: no tiene `dependencies` ni `peerDependencies`. Sólo consume `devDependencies` durante el desarrollo.
+El paquete es **zero-dependency** en producción: no declara `dependencies` ni `peerDependencies`. El compilador de TypeScript es la única dependencia de desarrollo.
 
 ### Contratos exportados
 
 | Contrato | Tipo | Descripción |
 |---|---|---|
-| `IApplication` | Interface | Contrato de aplicación de alto nivel (router, logger, listen, close) |
-| `IServerOptions` | Interface | Opciones de arranque del servidor (`port`, `hostname`) |
+| `IApplication` | Interface | Contrato de aplicación: enrutamiento, middleware, `dispatch` y archivos estáticos |
+| `IServerOptions` | Interface | Parámetros de red del servidor (`port`, `hostname`) |
 | `IContext` | Interface | Estado del ciclo request/response de una petición HTTP |
-| `IRouter` / `ILayer` | Interfaces | Enrutador y capa de ruta (GET, POST, PUT, PATCH, DELETE, use) |
-| `IMiddleware` / `IMiddlewareFn` / `Next` | Types | Middlewares en estilo función y en estilo clase |
-| `IBodyParser` / `ParsedBody` | Interface / Type | Contrato para parseo del cuerpo de la petición |
-| `ILogger` / `ILogEntry` / `LogLevel` | Interfaces / Type | Logger con soporte de niveles y logger hijo por `requestId` |
-| `IHttpError` | Interface | Forma base que deben cumplir todos los errores HTTP |
+| `IRouter` / `ILayer` | Interfaces | Enrutador y unidad de ruta: registro, matching y ejecución del stack |
+| `IMiddleware` / `IMiddlewareFn` / `Next` | Types | Firma de middlewares funcionales o de clase; `next` es opcional |
+| `IBodyParser` / `ParsedBody` | Interface / Type | Contrato de extracción y tipado del cuerpo de la petición |
+| `ILogger` / `ILogEntry` / `LogLevel` | Interfaces / Type | Logger con niveles de severidad y loggers hijos por `requestId` |
+| `IHttpError` | Interface | Forma que deben satisfacer todos los errores HTTP |
 | `HttpException` | Class | Clase base concreta para errores HTTP |
 | `NotFoundError` | Class | Error 404 Not Found |
 | `UnauthorizedError` | Class | Error 401 Unauthorized |
@@ -37,12 +37,11 @@ El paquete es **zero-dependency** en producción: no tiene `dependencies` ni `pe
 
 ---
 
-
 ## Dependencias
 
 ### Producción
 
-Este paquete es **zero-dependency**. No requiere ninguna dependencia en tiempo de ejecución.
+Este paquete no tiene dependencias en tiempo de ejecución.
 
 ### Desarrollo
 
@@ -51,117 +50,124 @@ Este paquete es **zero-dependency**. No requiere ninguna dependencia en tiempo d
 | `typescript` | `^5.4.0` | Compilador TypeScript |
 | `vitest` | `^1.6.0` | Framework de testing |
 
-### Configuración TypeScript relevante
+### Configuración TypeScript
 
-El paquete utiliza una configuración TypeScript estricta orientada a módulos ESM nativos de Node.js:
+El paquete se compila con una configuración orientada a módulos ESM nativos de Node.js:
 
-| Opción | Valor | Motivo |
+| Opción | Valor | Efecto |
 |---|---|---|
-| `target` | `ES2022` | Soporte moderno de clases y `private` nativo |
-| `module` | `NodeNext` | Módulos ESM/CJS con resolución nativa de Node.js |
-| `moduleResolution` | `NodeNext` | Requiere extensiones explícitas en imports (`.js`) |
-| `strict` | `true` | Tipado estricto completo |
-| `noUncheckedIndexedAccess` | `true` | Acceso a índices devuelve `T \| undefined` |
-| `exactOptionalPropertyTypes` | `true` | Distingue propiedad ausente de `undefined` explícito |
-| `declaration` + `declarationMap` | `true` | Genera `.d.ts` y sus mapas de origen |
+| `target` | `ES2022` | Habilita campos privados nativos y la semántica de clases de ES2022 |
+| `module` | `NodeNext` | Resolución híbrida ESM/CJS siguiendo la lógica de Node.js |
+| `moduleResolution` | `NodeNext` | Los imports deben incluir la extensión explícita `.js` |
+| `strict` | `true` | Activa todas las comprobaciones de tipo estrictas |
+| `noUncheckedIndexedAccess` | `true` | El acceso a índices produce `T \| undefined` |
+| `exactOptionalPropertyTypes` | `true` | Distingue entre propiedad ausente y `undefined` explícito |
+| `declaration` + `declarationMap` | `true` | Emite `.d.ts` con mapas de origen para navegación en IDEs |
 
 ---
 
-## Ejemplo básico
+## Ejemplos de uso
 
-### Implementar un logger
+### Lanzar un error HTTP
 
-```typescript
-import type { ILogger, ILogEntry } from '@vernali/contracts';
-
-class ConsoleLogger implements ILogger {
-  debug(message: string, data?: Record<string, unknown>): void {
-    console.debug({ level: 'debug', message, ...data });
-  }
-  info(message: string, data?: Record<string, unknown>): void {
-    console.info({ level: 'info', message, ...data });
-  }
-  warn(message: string, data?: Record<string, unknown>): void {
-    console.warn({ level: 'warn', message, ...data });
-  }
-  error(message: string, data?: Record<string, unknown>): void {
-    console.error({ level: 'error', message, ...data });
-  }
-  child(requestId: string): ILogger {
-    return new ScopedLogger(requestId, this);
-  }
-}
-```
-
-### Lanzar un error HTTP tipado
+`HttpException` es la clase base de todos los errores HTTP. Las subclases predefinidas cubren los códigos más comunes; para cualquier otro código se instancia `HttpException` directamente.
 
 ```typescript
-import {
-  HttpException,
-  NotFoundError,
-  BadRequestError,
-  ForbiddenError,
-  UnauthorizedError,
-  InternalServerError,
-} from '@vernali/contracts';
+import { HttpException, NotFoundError } from '@vernali/contracts';
 
-// Error genérico con código personalizado
-throw new HttpException(422, 'Unprocessable Entity', 'Validation Error');
+// Subclase semántica: emite automáticamente el código y el texto de estado
+throw new NotFoundError('El recurso solicitado no existe');
 
-// Errores semánticos predefinidos
-throw new NotFoundError('Usuario no encontrado');
-throw new UnauthorizedError('Token inválido');
-throw new BadRequestError('El campo email es requerido');
-throw new ForbiddenError('No tienes permisos para esta acción');
-throw new InternalServerError('Error inesperado del servidor');
+// Clase base: código, mensaje y nombre del error configurables
+throw new HttpException(422, 'El campo "email" no es válido', 'Unprocessable Entity');
 ```
+
+Todos los errores exponen `toJSON()`, que serializa `{ statusCode, error, message }` —listo para enviarse como cuerpo de respuesta.
+
+---
 
 ### Implementar un middleware
 
+`IMiddlewareFn<T>` admite dos firmas: con `next` (para continuar la cadena) o sin él (para terminar el ciclo directamente). Ambas son equivalentes desde el punto de vista del motor de composición.
+
 ```typescript
 import type { IMiddlewareFn } from '@vernali/contracts';
 
+// Sin next: el handler responde y termina el ciclo
+const healthCheck: IMiddlewareFn = async (ctx) => {
+  ctx.status(200).json({ status: 'ok' });
+};
+
+// Con next: ejecuta lógica propia y delega al siguiente middleware
 const requestLogger: IMiddlewareFn = async (ctx, next) => {
-  console.log(`[${ctx.requestId}] ${ctx.method} ${ctx.path}`);
+  const start = Date.now();
   await next();
+  console.log(`${ctx.method} ${ctx.path} — ${Date.now() - start}ms`);
 };
 ```
 
-### Implementar un router
+---
+
+### Implementar un Router
+
+`IRouter<T>` define el contrato que debe satisfacer cualquier implementación de enrutador. El método `handle` tiene la misma firma que `IMiddlewareFn`, lo que permite anidar routers en otros routers o en la aplicación sin adaptadores adicionales.
 
 ```typescript
-import type { IRouter, IContext, IMiddlewareFn, Next } from '@vernali/contracts';
+import type { IRouter, ILayer, IContext, IMiddlewareFn, Next } from '@vernali/contracts';
 
 class MyRouter implements IRouter {
-  readonly stack = [];
+  readonly stack: ILayer[] = [];
 
-  use(path: string, ...handlers: IMiddlewareFn[]): this { /* ... */ return this; }
-  get(path: string, ...handlers: IMiddlewareFn[]): this { /* ... */ return this; }
-  post(path: string, ...handlers: IMiddlewareFn[]): this { /* ... */ return this; }
-  put(path: string, ...handlers: IMiddlewareFn[]): this { /* ... */ return this; }
-  patch(path: string, ...handlers: IMiddlewareFn[]): this { /* ... */ return this; }
-  delete(path: string, ...handlers: IMiddlewareFn[]): this { /* ... */ return this; }
-  async handle(ctx: IContext, next: Next): Promise<void> { /* ... */ }
+  // Registra middlewares sueltos, sub-routers o rutas sin método
+  use(path: string | RegExp | IRouter | IMiddlewareFn, ...handlers: IMiddlewareFn[]): this {
+    return this;
+  }
+
+  // Punto de entrada unificado para registrar una capa en el stack
+  register(method: string | null, path: string | RegExp, ...handlers: IMiddlewareFn[]): this {
+    return this;
+  }
+
+  // Coincide con todas las peticiones independientemente del método HTTP
+  all(path: string | RegExp, ...handlers: IMiddlewareFn[]): this {
+    return this.register(null, path, ...handlers);
+  }
+
+  get(path: string, ...handlers: IMiddlewareFn[]): this {
+    return this.register('GET', path, ...handlers);
+  }
+
+  // Ejecuta el stack de middlewares; next es opcional para permitir anidamiento
+  async handle(ctx: IContext, next?: Next): Promise<void> {
+    if (next) await next();
+  }
 }
 ```
 
-### Manejar errores HTTP en un middleware
+---
+
+### Extender el contexto mediante genéricos
+
+Todas las interfaces principales —`IMiddlewareFn`, `IRouter`, `IApplication`— son genéricas sobre `T extends IContext`. Esto permite añadir propiedades al contexto y propagar ese tipado a través de toda la pila de middlewares sin casteos explícitos.
 
 ```typescript
-import type { IMiddlewareFn } from '@vernali/contracts';
-import { HttpException } from '@vernali/contracts';
+import type { IContext, IMiddlewareFn, IApplication } from '@vernali/contracts';
 
-const errorHandler: IMiddlewareFn = async (ctx, next) => {
-  try {
-    await next();
-  } catch (err) {
-    if (err instanceof HttpException) {
-      ctx.status(err.statusCode).json(err.toJSON());
-    } else {
-      ctx.status(500).json({ statusCode: 500, error: 'Internal Server Error', message: 'Unexpected error' });
-    }
-  }
+// Contexto extendido con datos de autenticación y configuración
+interface AppContext extends IContext {
+  user?: { id: string; role: 'admin' | 'user' };
+  config: Record<string, string>;
+}
+
+// El tipo de ctx refleja AppContext en todos los middlewares parametrizados
+const requireAuth: IMiddlewareFn<AppContext> = async (ctx, next) => {
+  if (!ctx.user) throw new Error('Unauthenticated');
+  await next();
 };
+
+// La aplicación queda vinculada al mismo tipo de contexto
+declare const app: IApplication<AppContext>;
+app.use(requireAuth);
 ```
 
 ---
