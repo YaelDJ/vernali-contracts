@@ -6,7 +6,7 @@
 
 import { IContext } from './context.interface.js';
 import type { ILogger } from './logger.interface.js';
-import type { IMiddlewareFn, Next } from './middleware.interface.js';
+import type { IMiddlewareFn } from './middleware.interface.js';
 import type { IRouter } from './router.interface.js';
 
 export interface IServerOptions {
