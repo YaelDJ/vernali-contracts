@@ -9,8 +9,8 @@ import type { IContext } from './context.interface.js';
 
 export type Next = () => Promise<void>;
 
-export type IMiddlewareFn = (ctx: IContext, next?: Next) => Promise<void> | void;
+export type IMiddlewareFn<T extends IContext = IContext> = (ctx: T, next?: Next) => Promise<void> | void;
 
-export interface IMiddleware {
-  handle: IMiddlewareFn;
+export interface IMiddleware<T extends IContext = IContext> {
+  handle: IMiddlewareFn<T>;
 }
