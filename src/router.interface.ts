@@ -14,21 +14,21 @@ type MatchResult = {
   params: Record<string, string>
 }
 
-export interface ILayer {
+export interface ILayer<T extends IContext = IContext> {
   path: string | RegExp;
-  method: string | null; // null = matches all methods (used by use())
-  handlers: IMiddlewareFn[];
-  router: IRouter | null;
+  method: string | null;
+  handlers: IMiddlewareFn<T>[];
+  router: IRouter<T> | null;
   isRoute: boolean
 
   matches(pathName: string, method: string | undefined): MatchResult | null
 }
 
-export interface IRouter {
-  use(path: string | RegExp | IRouter | IMiddlewareFn, ...handlers: IMiddlewareFn[]): this;
-  all(path: string | RegExp, ...handler: IMiddlewareFn[]): this;
-  register(method: string | null, path: string | RegExp, ...handlers: IMiddlewareFn[]): this
-  handle(ctx: IContext, next?: Next): Promise<void>;
-  readonly stack: ILayer[];
+export interface IRouter<T extends IContext = IContext> {
+  use(path: string | RegExp | IRouter<T> | IMiddlewareFn<T>, ...handlers: IMiddlewareFn<T>[]): this;
+  all(path: string | RegExp, ...handler: IMiddlewareFn<T>[]): this;
+  register(method: string | null, path: string | RegExp, ...handlers: IMiddlewareFn<T>[]): this
+  handle(ctx: T, next?: Next): Promise<void>;
+  readonly stack: ILayer<T>[];
   [key: string]: any
 }
