@@ -10,14 +10,14 @@ import type { ParsedBody } from './body.interface.js';
 
 export interface IContext {
   // Request
-  readonly originalUrl: string;
-  readonly baseUrl: string;
-  readonly method: string;
-  readonly path: string;
-  readonly params: Record<string, string>;
-  readonly query: Record<string, string>;
-  readonly cookies: Record<string, string>;
-  readonly headers: Record<string, string | string[]>;
+  originalUrl: string;
+  baseUrl: string;
+  method: string;
+  path: string;
+  params: Record<string, string>;
+  query: Record<string, string>;
+  cookies: Record<string, string>;
+  headers: Record<string, string | string[]>;
   body: ParsedBody;
 
   // Response
@@ -30,6 +30,6 @@ export interface IContext {
 
   // Metadata
   closed: boolean;
-  readonly requestId: string;
-  readonly state: Record<string, unknown>;
+  requestId: string;
+  state: Record<string, unknown>;
 }
