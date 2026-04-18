@@ -1,6 +1,6 @@
 {
   "name": "@vernali/contracts",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Shared TypeScript interfaces and base error classes for the Vernali suite",
   "homepage": "https://github.com/YaelDJ/vernali-contracts.git",
   "repository": {
